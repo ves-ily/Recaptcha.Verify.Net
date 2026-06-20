@@ -105,3 +105,15 @@ Tests for `LoggerExtensions.SendingRequest` — verify the secret key is never l
 | # | Test | Type | Description |
 |---|---|---|---|
 | 1 | `SendingRequest_NeverEmitsSensitiveData` | Fact | The secret, response token, and remote IP never appear in the formatted message or the structured `Data` property; `Data` shows `Secret=***`, `Response=<length=…>`, and `RemoteIp=***`. |
+
+## Tracing Tests (`Tracing/TracingTest.cs`)
+
+Tests for the `Recaptcha.Verify.Net` ActivitySource — span emission, kinds, tags, and error recording.
+
+| # | Test | Type | Description |
+|---|---|---|---|
+| 1 | `Verify_EmitsClientActivity_WithTags` | Fact | `VerifyAsync` emits a `Recaptcha.Verify` activity (Client kind, Ok status) with `recaptcha.action`/`success`/`score` tags. |
+| 2 | `Verify_RecordsError_WhenRequestThrows` | Fact | When the client throws, the activity status is `Error` and an `exception` event is recorded. |
+| 3 | `Validate_EmitsActivity_WithTags` | Fact | `Validate` emits a `Recaptcha.Validate` activity (Internal kind, Ok status) with action/score/success/match tags. |
+| 4 | `Extract_EmitsActivity_WithExtractorCount` | Fact | `GetToken` emits a `Recaptcha.ExtractToken` activity (Internal kind, Ok status) with the extractor count tag. |
+| 5 | `Extract_RecordsError_WhenNoExtractors` | Fact | When no extractors are registered, the activity status is `Error` and an `exception` event is recorded. |

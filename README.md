@@ -289,6 +289,26 @@ Exception | Description
 `VerifyRequestException` | This exception is thrown when verification request failed. Stores inner exception.
 `RecaptchaUnknownException` | This exception is thrown when an unexpected exception is catched during processing captcha.
 
+## Distributed Tracing
+The library emits `System.Diagnostics.ActivitySource` spans for each verification stage, so token extraction, the outbound verify request to Google, and result validation show up in your distributed traces. The source name is `Recaptcha.Verify.Net` (exposed as `RecaptchaInstrumentation.ActivitySourceName`); no extra package is required — it uses the `ActivitySource` shipped with .NET.
+
+Span | Kind | When | Tags
+--- | --- | --- | ---
+`Recaptcha.ExtractToken` | Internal | Extracting the response token | `recaptcha.extractors.count`
+`Recaptcha.Verify` | Client | Verifying the token with Google | `recaptcha.action`, `recaptcha.success`, `recaptcha.score`
+`Recaptcha.Validate` | Internal | Validating the verification result | `recaptcha.action`, `recaptcha.score_threshold`, `recaptcha.score`, `recaptcha.success`, `recaptcha.is_v3`, `recaptcha.action_matches`, `recaptcha.score_satisfies`
+
+On failure the span status is set to `Error` and the exception is recorded as an `exception` event (OpenTelemetry semantic conventions).
+
+Subscribe with OpenTelemetry in the host app:
+
+```csharp
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .AddSource(RecaptchaInstrumentation.ActivitySourceName)
+        .AddOtlpExporter());
+```
+
 ## Examples
 Examples could be found in library repository:
 - [**Recaptcha.Verify.Net.ConsoleApp**](https://github.com/vese/Recaptcha.Verify.Net/blob/release/v3.1/examples/Recaptcha.Verify.Net.ConsoleApp/Program.cs) (.NET 10)

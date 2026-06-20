@@ -17,38 +17,58 @@ internal class RecaptchaVerificationService(IOptions<RecaptchaVerificationOption
     /// <inheritdoc />
     public async Task<VerifyResponse> VerifyAsync(string response, string? remoteIp = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(options.SecretKey))
-        {
-            throw new SecretKeyNotSpecifiedException();
-        }
-
-        if (string.IsNullOrWhiteSpace(response))
-        {
-            throw new EmptyCaptchaAnswerException();
-        }
-
-        var request = new VerifyRequest
-        {
-            Secret = options.SecretKey,
-            Response = response,
-            RemoteIp = remoteIp
-        };
-
-        logger.SendingRequest(request);
-
-        VerifyResponse result;
-
+        using var activity = RecaptchaInstrumentation.ActivitySource.StartActivity("Recaptcha.Verify", ActivityKind.Client);
         try
         {
-            result = await recaptchaClient.VerifyAsync(request, cancellationToken);
+            if (string.IsNullOrWhiteSpace(options.SecretKey))
+            {
+                throw new SecretKeyNotSpecifiedException();
+            }
+
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                throw new EmptyCaptchaAnswerException();
+            }
+
+            var request = new VerifyRequest
+            {
+                Secret = options.SecretKey,
+                Response = response,
+                RemoteIp = remoteIp
+            };
+
+            logger.SendingRequest(request);
+
+            VerifyResponse result;
+
+            try
+            {
+                result = await recaptchaClient.VerifyAsync(request, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                throw new VerifyRequestException(e);
+            }
+
+            logger.RequestCompleted(result);
+
+            if (result.Action is not null)
+            {
+                activity?.SetTag("recaptcha.action", result.Action);
+            }
+            activity?.SetTag("recaptcha.success", result.Success);
+            if (result.Score.HasValue)
+            {
+                activity?.SetTag("recaptcha.score", result.Score.GetValueOrDefault());
+            }
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return result;
         }
         catch (Exception e)
         {
-            throw new VerifyRequestException(e);
+            activity?.SetError(e);
+            throw;
         }
-
-        logger.RequestCompleted(result);
-
-        return result;
     }
 }

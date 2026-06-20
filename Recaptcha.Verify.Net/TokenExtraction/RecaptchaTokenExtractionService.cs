@@ -17,33 +17,45 @@ internal class RecaptchaTokenExtractionService(IEnumerable<IRecaptchaTokenExtrac
     /// <inheritdoc />
     public string GetToken(ActionExecutingContext context)
     {
-        string? recaptchaToken = null;
-        var recaptchaTokenExtracted = false;
-        var tokenExtractorsCount = 0;
-
-        foreach (var tokenExtractor in tokenExtractors)
+        using var activity = RecaptchaInstrumentation.ActivitySource.StartActivity("Recaptcha.ExtractToken");
+        try
         {
-            tokenExtractorsCount++;
+            string? recaptchaToken = null;
+            var recaptchaTokenExtracted = false;
+            var tokenExtractorsCount = 0;
 
-            recaptchaToken = tokenExtractor.GetToken(context);
-
-            if (!string.IsNullOrWhiteSpace(recaptchaToken))
+            foreach (var tokenExtractor in tokenExtractors)
             {
-                recaptchaTokenExtracted = true;
-                break;
+                tokenExtractorsCount++;
+
+                recaptchaToken = tokenExtractor.GetToken(context);
+
+                if (!string.IsNullOrWhiteSpace(recaptchaToken))
+                {
+                    recaptchaTokenExtracted = true;
+                    break;
+                }
             }
-        }
 
-        if (tokenExtractorsCount == 0)
+            activity?.SetTag("recaptcha.extractors.count", tokenExtractorsCount);
+
+            if (tokenExtractorsCount == 0)
+            {
+                throw new TokenExtractorNotFound();
+            }
+
+            if (!recaptchaTokenExtracted)
+            {
+                throw new EmptyCaptchaAnswerException();
+            }
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return recaptchaToken!;
+        }
+        catch (Exception e)
         {
-            throw new TokenExtractorNotFound();
+            activity?.SetError(e);
+            throw;
         }
-
-        if (!recaptchaTokenExtracted)
-        {
-            throw new EmptyCaptchaAnswerException();
-        }
-
-        return recaptchaToken!;
     }
 }
