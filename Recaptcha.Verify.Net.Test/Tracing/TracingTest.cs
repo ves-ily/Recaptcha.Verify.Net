@@ -120,11 +120,15 @@ public class TracingTest
     }
 
     /// <summary>
-    /// Subscribes to <see cref="RecaptchaInstrumentation.ActivitySource"/> and collects started activities.
+    /// Subscribes to <see cref="RecaptchaInstrumentation.ActivitySource"/> and collects only the
+    /// activities started within this capture. Each capture opens its own parent <see cref="Activity"/>
+    /// and records only its direct children, so spans emitted by other test classes (which xUnit runs
+    /// in parallel) never leak into the assertion. Test-collection parallelization stays enabled.
     /// </summary>
     private sealed class ActivityCapture : IDisposable
     {
         private readonly ActivityListener _listener;
+        private Activity? _scope;
         public List<Activity> Activities { get; } = [];
 
         public ActivityCapture()
@@ -135,10 +139,21 @@ public class TracingTest
                 Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
                 SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
             };
-            _listener.ActivityStarted += activity => Activities.Add(activity);
+            _listener.ActivityStarted += activity =>
+            {
+                if (_scope is not null && activity.ParentId == _scope.Id)
+                {
+                    Activities.Add(activity);
+                }
+            };
             ActivitySource.AddActivityListener(_listener);
+            _scope = RecaptchaInstrumentation.ActivitySource.StartActivity("tracing-test-scope");
         }
 
-        public void Dispose() => _listener.Dispose();
+        public void Dispose()
+        {
+            _scope?.Dispose();
+            _listener.Dispose();
+        }
     }
 }

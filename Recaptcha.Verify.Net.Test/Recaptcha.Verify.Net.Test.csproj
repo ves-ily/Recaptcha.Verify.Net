@@ -28,8 +28,4 @@
     <ProjectReference Include="..\Recaptcha.Verify.Net\Recaptcha.Verify.Net.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>
