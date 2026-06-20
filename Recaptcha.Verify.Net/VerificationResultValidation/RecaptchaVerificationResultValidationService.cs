@@ -16,32 +16,51 @@ public class RecaptchaVerificationResultValidationService(IOptions<RecaptchaVali
     /// <inheritdoc />
     public ValidationResult Validate(VerifyResponse response, string? action = null, float? score = null)
     {
-        var validationResult = new ValidationResult
+        using var activity = RecaptchaInstrumentation.ActivitySource.StartActivity("Recaptcha.Validate");
+        try
         {
-            ResponseSuccessful = response.Success,
-            IsV3 = response.IsV3,
-            ActionMatches = false,
-            ScoreSatisfies = false,
-        };
+            var validationResult = new ValidationResult
+            {
+                ResponseSuccessful = response.Success,
+                IsV3 = response.IsV3,
+                ActionMatches = false,
+                ScoreSatisfies = false,
+            };
 
-        if (response.Success && response.IsV3)
-        {
-            var expectedAction = GetExpectedAction(action);
+            if (response.Success && response.IsV3)
+            {
+                var expectedAction = GetExpectedAction(action);
 
-            validationResult.ActionMatches = expectedAction.Equals(response.Action);
+                validationResult.ActionMatches = expectedAction.Equals(response.Action);
 
-            var scoreThreshold = GetScoreThreshold(score, expectedAction);
+                var scoreThreshold = GetScoreThreshold(score, expectedAction);
 
-            validationResult.ScoreSatisfies = response.Score!.Value >= scoreThreshold;
+                validationResult.ScoreSatisfies = response.Score!.Value >= scoreThreshold;
 
-            logger.ResponseChecked(expectedAction, scoreThreshold, validationResult);
+                logger.ResponseChecked(expectedAction, scoreThreshold, validationResult);
+
+                activity?.SetTag("recaptcha.action", expectedAction);
+                activity?.SetTag("recaptcha.score_threshold", scoreThreshold);
+                activity?.SetTag("recaptcha.score", response.Score!.Value);
+            }
+            else
+            {
+                logger.ResponseChecked(null, null, validationResult);
+            }
+
+            activity?.SetTag("recaptcha.success", validationResult.ResponseSuccessful);
+            activity?.SetTag("recaptcha.is_v3", validationResult.IsV3);
+            activity?.SetTag("recaptcha.action_matches", validationResult.ActionMatches);
+            activity?.SetTag("recaptcha.score_satisfies", validationResult.ScoreSatisfies);
+
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return validationResult;
         }
-        else
+        catch (Exception e)
         {
-            logger.ResponseChecked(null, null, validationResult);
+            activity?.SetError(e);
+            throw;
         }
-
-        return validationResult;
     }
 
     private string GetExpectedAction(string? action)

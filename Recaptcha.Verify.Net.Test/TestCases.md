@@ -92,3 +92,15 @@ Tests for `RecaptchaVerificationResultValidationService` — verification result
 | 6 | `Validate_v3_SuccessfulVerification_WithActionsScoreThresholds` | Theory | v3 validation with per-action score thresholds via `ActionsScoreThresholds`. Same assertions as above but using action-to-score mappings. Parameters: verification results with varying scores. |
 | 7 | `Validate_v3_SuccessfulVerification_WithScoreThresholdDirectly` | Theory | v3 validation when action and score are passed directly to `Validate`. Confirms score-satisfies logic with direct parameters. Parameters: verification results with varying scores. |
 | 8 | `Validate_v3_SuccessfulVerification_WithScoreThresholdDirectly_OverridesFromOptions` | Theory | Directly passed action/score override values from options. Service is initialized with different options but direct parameters take precedence. Parameters: verification results with varying scores. |
+
+## Tracing Tests (`Tracing/TracingTest.cs`)
+
+Tests for the `Recaptcha.Verify.Net` ActivitySource — span emission, kinds, tags, and error recording.
+
+| # | Test | Type | Description |
+|---|---|---|---|
+| 1 | `Verify_EmitsClientActivity_WithTags` | Fact | `VerifyAsync` emits a `Recaptcha.Verify` activity (Client kind, Ok status) with `recaptcha.action`/`success`/`score` tags. |
+| 2 | `Verify_RecordsError_WhenRequestThrows` | Fact | When the client throws, the activity status is `Error` and an `exception` event is recorded. |
+| 3 | `Validate_EmitsActivity_WithTags` | Fact | `Validate` emits a `Recaptcha.Validate` activity (Internal kind, Ok status) with action/score/success/match tags. |
+| 4 | `Extract_EmitsActivity_WithExtractorCount` | Fact | `GetToken` emits a `Recaptcha.ExtractToken` activity (Internal kind, Ok status) with the extractor count tag. |
+| 5 | `Extract_RecordsError_WhenNoExtractors` | Fact | When no extractors are registered, the activity status is `Error` and an `exception` event is recorded. |
