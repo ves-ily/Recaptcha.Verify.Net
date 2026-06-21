@@ -8,6 +8,12 @@ public class RecaptchaValidationOptions
     /// <summary>
     /// Optional. Action to check for V3 Recaptcha request.
     /// </summary>
+    /// <remarks>
+    /// Action matching is an ordinal, case-sensitive comparison with no whitespace trimming — the
+    /// expected action and the response action must be byte-for-byte equal. This matches Google
+    /// reCAPTCHA v3's case-sensitive action semantics, so callers must specify actions with the exact
+    /// casing and whitespace expected from the client-side execution.
+    /// </remarks>
     public string? Action { get; set; }
 
     /// <summary>

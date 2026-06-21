@@ -1,4 +1,5 @@
 ﻿using Recaptcha.Verify.Net.Exceptions.Configuration;
+using Recaptcha.Verify.Net.TokenVerification.Client.Models.Response;
 using Xunit;
 
 namespace Recaptcha.Verify.Net.Test.VerificationResultValidation;
@@ -143,5 +144,44 @@ public class ValidationServiceTest
         Assert.True(validationResult.ActionMatches);
         Assert.Equal(scoreSatisfies, validationResult.ScoreSatisfies);
         Assert.Equal(scoreSatisfies, validationResult.Success);
+    }
+
+    // Characterization tests for action-match comparison: ordinal, case-sensitive, no whitespace trimming.
+    // Behavior is documented (NOT changed) — matching Google reCAPTCHA v3 case-sensitive action semantics.
+
+    [Fact]
+    public void Validate_v3_ActionMatching_IsCaseSensitive()
+    {
+        // Expected "login" vs response "Login" must NOT match.
+        var response = new VerifyResponse { Success = true, Score = 1.0f, Action = "Login" };
+        var validationService = ValidationServiceFixture.Create("login", VerificationResultValidationFixture.Score, null);
+
+        var validationResult = validationService.Validate(response);
+
+        Assert.False(validationResult.ActionMatches);
+    }
+
+    [Fact]
+    public void Validate_v3_ActionMatching_DoesNotTrimWhitespace()
+    {
+        // Expected "login" vs response "login " (trailing space) must NOT match.
+        var response = new VerifyResponse { Success = true, Score = 1.0f, Action = "login " };
+        var validationService = ValidationServiceFixture.Create("login", VerificationResultValidationFixture.Score, null);
+
+        var validationResult = validationService.Validate(response);
+
+        Assert.False(validationResult.ActionMatches);
+    }
+
+    [Fact]
+    public void Validate_v3_ActionMatching_ExactMatch_Succeeds()
+    {
+        // Regression: exact match "login" vs "login" must match.
+        var response = new VerifyResponse { Success = true, Score = 1.0f, Action = "login" };
+        var validationService = ValidationServiceFixture.Create("login", VerificationResultValidationFixture.Score, null);
+
+        var validationResult = validationService.Validate(response);
+
+        Assert.True(validationResult.ActionMatches);
     }
 }
