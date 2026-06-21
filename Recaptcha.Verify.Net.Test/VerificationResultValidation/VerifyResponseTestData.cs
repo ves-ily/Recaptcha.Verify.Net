@@ -21,7 +21,7 @@ public class VerifyResponseTestData : VerifyResponse, IXunitSerializable
         Success = info.GetValue<bool>(nameof(Success));
         Score = info.GetValue<float?>(nameof(Score));
         Action = info.GetValue<string?>(nameof(Action));
-        ChallengeTs = info.GetValue<DateTime>(nameof(ChallengeTs));
+        ChallengeTs = info.GetValue<DateTimeOffset?>(nameof(ChallengeTs));
         Hostname = info.GetValue<string?>(nameof(Hostname));
         ApkPackageName = info.GetValue<string?>(nameof(ApkPackageName));
         ErrorCodes = info.GetValue<List<string>?>(nameof(ErrorCodes));

@@ -125,7 +125,7 @@ The service returns a `VerifyResponse` object containing verification details.
 |`IsV3`|`bool`|Indicates whether this is a reCAPTCHA v3 verification (based on score presence)|
 |`Score`|`float?`|**reCAPTCHA v3 only**: Confidence score from 0.0 (likely bot) to 1.0 (likely human)|
 |`Action`|`string?`|**reCAPTCHA v3 only**: The action name specified during client-side execution|
-|`ChallengeTs`|`DateTime`|Timestamp when the challenge was loaded|
+|`ChallengeTs`|`DateTimeOffset?`|Timestamp when the challenge was loaded (`null` when omitted by Google; preserves the original offset)|
 |`Hostname`|`string?`|The hostname of the site where the reCAPTCHA was solved|
 |`ApkPackageName`|`string?`|For Android applications: the package name of the APK|
 |`ErrorCodes`|`IReadOnlyCollection<string>?`|Raw error codes returned by Google's API|
