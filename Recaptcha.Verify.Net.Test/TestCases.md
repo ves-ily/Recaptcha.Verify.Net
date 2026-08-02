@@ -105,3 +105,12 @@ Tests for `LoggerExtensions.SendingRequest` — verify the secret key is never l
 | # | Test | Type | Description |
 |---|---|---|---|
 | 1 | `SendingRequest_NeverEmitsSensitiveData` | Fact | The secret, response token, and remote IP never appear in the formatted message or the structured `Data` property; `Data` shows `Secret=***`, `Response=<length=…>`, and `RemoteIp=***`. |
+
+## Verify Response Tests (`TokenVerification/VerifyResponseTest.cs`)
+
+Tests for `VerifyResponse.ChallengeTs` JSON deserialization — the `DateTimeOffset?` type preserves timezone offsets and handles omitted values.
+
+| # | Test | Type | Description |
+|---|---|---|---|
+| 1 | `Deserialize_ChallengeTs_WithOffset_PreservesOffset` | Fact | Deserializing a `challenge_ts` with a timezone offset (e.g. `+03:00`) preserves the original offset and date components on `ChallengeTs`. |
+| 2 | `Deserialize_ChallengeTs_Omitted_YieldsNull` | Fact | When the JSON omits `challenge_ts`, `ChallengeTs` deserializes to `null` (nullable offset). |
