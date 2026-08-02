@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Recaptcha.Verify.Net.Configuration;
+using Recaptcha.Verify.Net.Test.TokenExtraction;
 using Recaptcha.Verify.Net.TokenExtraction;
 using Recaptcha.Verify.Net.TokenVerification.Client;
 using Xunit;
@@ -201,6 +203,59 @@ public class ConfigurationExtensionsTest
 
         Assert.Single(extractors);
         Assert.IsType<ActionArgumentsTokenExtractor>(extractors[0]);
+    }
+
+    [Fact]
+    public void AddRecaptcha_TokenExtractors_DelegateWinsOverActionArgumentName_RegistersSingleExtractor()
+    {
+        const string delegateToken = "delegate-token";
+
+        var services = new ServiceCollection();
+        services.AddRecaptcha(o =>
+        {
+            o.Verification.SecretKey = SecretKey;
+            // Name-based extractor would find ActionArgumentsTokenValue for this argument name...
+            o.TokenExtractors.ActionArgument = ActionExecutingContextFixture.ActionArgumentsTokenName;
+            // ...but the delegate wins and only it is registered.
+            o.TokenExtractors.GetResponseTokenFromActionArguments = _ => delegateToken;
+        });
+
+        using var provider = services.BuildServiceProvider();
+        var extractors = provider.GetServices<IRecaptchaTokenExtractor>().ToList();
+
+        // Only ONE ActionArgumentsTokenExtractor must be registered (not two).
+        Assert.Single(extractors);
+        Assert.IsType<ActionArgumentsTokenExtractor>(extractors[0]);
+
+        // Behaviorally: in a context where the name-based extractor WOULD return a different token,
+        // the delegate's token is the one returned by the extraction service.
+        var context = ActionExecutingContextFixture.CreateActionExecutingContext();
+        var extractionService = provider.GetRequiredService<IRecaptchaTokenExtractionService>();
+        var token = extractionService.GetToken(context);
+        Assert.Equal(delegateToken, token);
+    }
+
+    [Fact]
+    public void AddRecaptcha_TokenExtractors_ActionArgumentNameOnly_StillExtractsToken()
+    {
+        var services = new ServiceCollection();
+        services.AddRecaptcha(o =>
+        {
+            o.Verification.SecretKey = SecretKey;
+            o.TokenExtractors.ActionArgument = ActionExecutingContextFixture.ActionArgumentsTokenName;
+        });
+
+        using var provider = services.BuildServiceProvider();
+        var extractors = provider.GetServices<IRecaptchaTokenExtractor>().ToList();
+
+        Assert.Single(extractors);
+        Assert.IsType<ActionArgumentsTokenExtractor>(extractors[0]);
+
+        // Regression guard: with only the name configured, the name-based extractor still resolves the token.
+        var context = ActionExecutingContextFixture.CreateActionExecutingContext();
+        var extractionService = provider.GetRequiredService<IRecaptchaTokenExtractionService>();
+        var token = extractionService.GetToken(context);
+        Assert.Equal(ActionExecutingContextFixture.ActionArgumentsTokenValue, token);
     }
 
     [Fact]

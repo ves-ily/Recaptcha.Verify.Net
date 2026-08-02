@@ -66,6 +66,10 @@ public static class ConfigurationExtensions
 
     private static void AddTokenExtractorForOptions(this IServiceCollection services, RecaptchaOptions options)
     {
+        // Extractors are registered (and consulted by RecaptchaTokenExtractionService, first token wins) in this order:
+        //   Header -> Form -> Query -> ActionArgument(name) -> GetResponseTokenFromActionArguments(delegate) -> GetResponseTokenFromExecutingContext.
+        // When both the ActionArgument name and the GetResponseTokenFromActionArguments delegate are set, only the
+        // delegate is registered (it wins; see the action-arguments block below).
         var tokenExtractors = options.TokenExtractors;
 
 #pragma warning disable CS0618 // Suppress obsolete warnings for legacy backward-compatibility fallbacks
@@ -90,15 +94,17 @@ public static class ConfigurationExtensions
         }
 
         var actionArgumentName = tokenExtractors.ActionArgument;
-        if (!string.IsNullOrEmpty(actionArgumentName))
-        {
-            services.AddRecaptchaActionArgumentsTokenExtractor(actionArgumentName);
-        }
-
         var fromActionArguments = tokenExtractors.GetResponseTokenFromActionArguments ?? legacy.GetResponseTokenFromActionArguments;
+
+        // The delegate wins over the name form when both are set: only one
+        // ActionArgumentsTokenExtractor is registered (previously two were).
         if (fromActionArguments is not null)
         {
             services.AddRecaptchaActionArgumentsTokenExtractor(fromActionArguments);
+        }
+        else if (!string.IsNullOrEmpty(actionArgumentName))
+        {
+            services.AddRecaptchaActionArgumentsTokenExtractor(actionArgumentName);
         }
 
         var fromExecutingContext = tokenExtractors.GetResponseTokenFromExecutingContext ?? legacy.GetResponseTokenFromExecutingContext;
