@@ -105,3 +105,21 @@ Tests for `LoggerExtensions.SendingRequest` — verify the secret key is never l
 | # | Test | Type | Description |
 |---|---|---|---|
 | 1 | `SendingRequest_NeverEmitsSensitiveData` | Fact | The secret, response token, and remote IP never appear in the formatted message or the structured `Data` property; `Data` shows `Secret=***`, `Response=<length=…>`, and `RemoteIp=***`. |
+
+## Custom Base URL Tests (`TokenVerification/CustomBaseUrlTest.cs`)
+
+End-to-end coverage for a custom `RecaptchaVerificationOptions.BaseUrl`: drives the request through the real `AddRecaptcha` DI registration and `IRecaptchaVerificationService.VerifyAsync`, then asserts the outgoing request targets `<base>/siteverify` with the expected form fields.
+
+| # | Test | Type | Description |
+|---|---|---|---|
+| 1 | `VerifyAsync_PostsToCustomBaseUrlSiteVerify_WithExpectedFormFields` | Fact | A custom `BaseUrl` is normalized (trailing slash appended) and the verification posts to `<base>/siteverify` carrying the `secret`, `response`, and `remoteip` form fields. |
+
+## Score Boundary Tests (`VerificationResultValidation/ScoreBoundaryTest.cs`)
+
+Focused boundary coverage for the `score >= threshold` check in `RecaptchaVerificationResultValidationService` — equality boundary, a hair-below value, and a `NaN` score.
+
+| # | Test | Type | Description |
+|---|---|---|---|
+| 1 | `ScoreSatisfies_True_WhenScoreEqualsThreshold` | Fact | A score equal to the threshold satisfies it (`ScoreSatisfies=true`) because the comparison uses `>=`. |
+| 2 | `ScoreSatisfies_False_WhenScoreIsJustBelowThreshold` | Fact | A score one float ULP below the threshold does not satisfy it (`ScoreSatisfies=false`). |
+| 3 | `ScoreSatisfies_False_WhenScoreIsNaN` | Fact | A `NaN` score never satisfies the threshold (NaN comparisons are false), so `ScoreSatisfies=false`. |
