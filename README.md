@@ -147,7 +147,7 @@ This is performed by the `RecaptchaVerificationResultValidationService`.
 
 #### Validation Logic
 For reCAPTCHA v3 (detected by the presence of a Score value), the service checks:
-- **Action Matching**: Ensures the returned action matches the expected value
+- **Action Matching**: Ensures the returned action matches the expected value (ordinal, case-sensitive comparison with no whitespace trimming — callers must pass actions with the exact casing and whitespace expected, matching Google reCAPTCHA v3's case-sensitive action semantics)
   - Provided in the `RecaptchaAttribute` constructor
   - Global action `RecaptchaOptions.Validation.Action`
 - **Score Threshold**: Ensures the confidence score meets the required threshold

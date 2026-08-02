@@ -97,6 +97,9 @@ Tests for `RecaptchaVerificationResultValidationService` — verification result
 | 6 | `Validate_v3_SuccessfulVerification_WithActionsScoreThresholds` | Theory | v3 validation with per-action score thresholds via `ActionsScoreThresholds`. Same assertions as above but using action-to-score mappings. Parameters: verification results with varying scores. |
 | 7 | `Validate_v3_SuccessfulVerification_WithScoreThresholdDirectly` | Theory | v3 validation when action and score are passed directly to `Validate`. Confirms score-satisfies logic with direct parameters. Parameters: verification results with varying scores. |
 | 8 | `Validate_v3_SuccessfulVerification_WithScoreThresholdDirectly_OverridesFromOptions` | Theory | Directly passed action/score override values from options. Service is initialized with different options but direct parameters take precedence. Parameters: verification results with varying scores. |
+| 9 | `Validate_v3_ActionMatching_IsCaseSensitive` | Fact | Action matching is case-sensitive: expected `login` vs response `Login` does not match (`ActionMatches=false`). |
+| 10 | `Validate_v3_ActionMatching_DoesNotTrimWhitespace` | Fact | Action matching does not trim whitespace: expected `login` vs response `login ` (trailing space) does not match (`ActionMatches=false`). |
+| 11 | `Validate_v3_ActionMatching_ExactMatch_Succeeds` | Fact | Regression guard: an exact action match (`login` vs `login`) yields `ActionMatches=true`. |
 
 ## Logger Extensions Tests (`Logging/LoggerExtensionsTest.cs`)
 
