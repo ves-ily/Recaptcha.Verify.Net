@@ -30,9 +30,11 @@ public class VerifyResponse
 
     /// <summary>
     /// Timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ).
+    /// <c>null</c> when Google omits the field. <see cref="DateTimeOffset"/> preserves
+    /// the original offset (the <c>...ZZ</c> part) returned by Google.
     /// </summary>
     [JsonPropertyName("challenge_ts")]
-    public DateTime ChallengeTs { get; set; }
+    public DateTimeOffset? ChallengeTs { get; set; }
 
     /// <summary>
     /// The hostname of the site where the reCAPTCHA was solved.
