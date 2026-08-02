@@ -4,7 +4,7 @@
 
 A lightweight library for server-side verification of Google reCAPTCHA v2 and v3 response tokens in .NET applications.
 
-Starting with version 3.0.0, Recaptcha.Verify.Net supports the following platforms:
+Starting with version 3.1.0, Recaptcha.Verify.Net supports the following platforms:
 - .NET 8
 - .NET 9
 - .NET 10
@@ -28,15 +28,15 @@ The package is available on [NuGet](https://www.nuget.org/packages/Recaptcha.Ver
 
 - Via Package Manager Console
    ```powershell
-   PM> Install-Package Recaptcha.Verify.Net -Version 3.0.1
+   PM> Install-Package Recaptcha.Verify.Net -Version 3.1.0
    ```
 - Via .NET CLI
    ```bash
-   dotnet add package Recaptcha.Verify.Net --version 3.0.1
+   dotnet add package Recaptcha.Verify.Net --version 3.1.0
    ```
 - Adding reference to project file
    ```xml
-   <PackageReference Include="Recaptcha.Verify.Net" Version="3.0.1" />
+   <PackageReference Include="Recaptcha.Verify.Net" Version="3.1.0" />
    ```
 
 ## Basic Usage
