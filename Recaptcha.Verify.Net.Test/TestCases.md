@@ -44,6 +44,8 @@ Tests for `AddRecaptcha` service registration: nested options wiring, `Recaptcha
 | 21 | `AddRecaptcha_DefaultTimeout_IsTenSeconds` | Fact | The default `Verification.Timeout` is 10 seconds. |
 | 22 | `AddRecaptcha_KeepsHttpClientDefaultTimeout_WhenTimeoutIsZero` | Fact | `Verification.Timeout = TimeSpan.Zero` keeps the `HttpClient` default timeout (100s). |
 | 23 | `AddRecaptcha_AppliesConfigureHttpClientAction` | Fact | The optional `configureHttpClient` action runs after the library defaults, so it can add default request headers and override `Timeout`. |
+| 24 | `AddRecaptcha_TokenExtractors_DelegateWinsOverActionArgumentName_RegistersSingleExtractor` | Fact | When both `TokenExtractors.GetResponseTokenFromActionArguments` (delegate) and `TokenExtractors.ActionArgument` (name) are set, only a single `ActionArgumentsTokenExtractor` is registered and the delegate's token is returned. |
+| 25 | `AddRecaptcha_TokenExtractors_ActionArgumentNameOnly_StillExtractsToken` | Fact | With only `TokenExtractors.ActionArgument` (name) configured, a single name-based `ActionArgumentsTokenExtractor` is registered and still resolves the token (regression guard). |
 
 ## Token Extraction Tests (`TokenExtraction/TokenExtractionTest.cs`)
 
